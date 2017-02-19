@@ -25,7 +25,7 @@
 
     // received the locations of the stars
     socket.on('thelocation',function(data){
-      console.log('received starlocation:'+ data);
+      // console.log('received starlocation:'+ data);
       for(var i=0; i<20; i++){
         otherStars(data.starry[i].x, data.starry[i].y, i);
       }
@@ -33,7 +33,7 @@
 
     // received the location of a new line
     socket.on('showLine', function(data){
-      console.log('received newline:'+data);
+      // console.log('received newline:'+data);
       otherLine(data.x1, data.y1, data.x2, data.y2, data.h, data.sat, data.bri);
     });
 
