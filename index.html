@@ -1,0 +1,74 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <!-- to get rid of favicon request in console -->
+  <link rel="shortcut icon" href="">
+
+  <!-- P5 STUFF -->
+  <script language="javascript" type="text/javascript" src="libraries/p5.js"></script>
+  <script language="javascript" type="text/javascript" src="sketch.js"></script>
+  <script language="javascript" src="libraries/p5.dom.js"></script>
+  <!-- SOCKET STUFF -->
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Butterfly+Kids" rel="stylesheet">
+
+  <script type="text/javascript">
+    
+    /// SOCKET STUFF
+    var socket = io.connect();
+    
+    socket.on('connect', function() {
+      console.log("Connected");
+    });
+
+    // received the locations of the stars
+    socket.on('thelocation',function(data){
+      console.log('received starlocation:'+ data);
+      for(var i=0; i<20; i++){
+        otherStars(data.starry[i].x, data.starry[i].y, i);
+      }
+    });
+
+    // received the location of a new line
+    socket.on('showLine', function(data){
+      console.log('received newline:'+data);
+      otherLine(data.x1, data.y1, data.x2, data.y2, data.h, data.sat, data.bri);
+    });
+
+    // recevied the call to clear the lines
+    socket.on('clearlines', function(){
+      otherClear();
+    });
+  </script>
+
+  <style> 
+    html{
+      height: 100%;
+    }
+
+    body{
+      padding: 0; 
+      margin: 0;
+      font-family: 'Butterfly Kids', cursive;
+      font-size: 2.75em;
+      text-align: center;
+      background-color: #0e2c5b;
+    } 
+    h1{
+      margin-bottom: 0px;
+      margin-top: 5px;
+      color: #ffdd00;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Stargazing</h1>
+  </header>
+</body>
+</html>
+
+
+
