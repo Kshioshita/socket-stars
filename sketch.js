@@ -2,11 +2,13 @@
 
 var stars= []; //where star locations are stored
 var lines=[]; //where lines are stored
-var clickNum=0;
+var clickNum=3;
 var x1, x2, y1, y2;
 var isGrowing=true;
 var h, sat, bri; //stores the shade of yellow
-
+var isMoved= false;
+var moveStar, starNum;
+var poked=true;
 function setup() {
 	createCanvas(windowWidth, windowHeight-110);
 	// generates a random shade of yellow
@@ -41,6 +43,24 @@ function setup() {
 
 function draw() {
 	background("#0e2c5b");
+	textSize(20);
+	fill('#ffdd00');
+	if(clickNum==0){
+		noStroke();
+		textAlign(CENTER);
+		text('Click a star', windowWidth/2, 80);
+	}
+	else if(clickNum==1){
+		noStroke();
+		textAlign(CENTER);
+		text('Click your second star', windowWidth/2, 80);
+	}
+	else if(clickNum==3){
+		noStroke();
+		textAlign(CENTER);
+		text('Generate stars to Start', windowWidth/2, 80);
+	}
+	
 	for(var i=0; i<stars.length; i++){
 		// displays the stars
  		stars[i].display();
@@ -50,6 +70,17 @@ function draw() {
  	// shows connections between stars
  	for(var i=0; i<lines.length; i++){
  		lines[i].show();
+ 	}
+
+ 	if(isMoved){
+ 		moveStar.x=mouseX;
+ 		moveStar.y=mouseY;
+ 		clickNum=0;
+		sendMoveStar({
+			'starX': moveStar.x,
+			'starY': moveStar.y,
+			'starNum': starNum
+		});
  	}
 }
 
@@ -63,14 +94,20 @@ function sendLine(message){
 	socket.emit('newLine',message);
 }
 
+function sendOneStar(message){
+	//send new star
+	socket.emit('newStar', message);
+}
 function sendClear(){
 	// send request to clear lines
 	socket.emit('clearing');
 }
+function sendMoveStar(message){
+	socket.emit('movestar', message);
+}
 
 function otherStars(someX, someY, i){
 	// display received locations of stars
-
 	if(i==0){
 		stars=[]; //clear previous stars
 		emptylines(); //clear previous lines
@@ -79,6 +116,7 @@ function otherStars(someX, someY, i){
 	else{
 		stars.push(new Star(someX, someY));
 	}
+	clickNum=0;
 }
 
 function otherLine(x1, y1, x2, y2, h, sat, bri){
@@ -94,28 +132,39 @@ function otherClear(){
 	clickNum=0;
 }
 
+function addingStar(starX, starY){
+	stars.push(new Star(starX, starY));
+}
+
+function movingStar(starX, starY, starNum){
+	stars[starNum].x=starX;
+	stars[starNum].y=starY;
+}
+
 function windoResized(){
 	createCanvas(windowWidth, windowHeight);
 }
 
-function mousePressed(){
-	console.log('mouse clicked');
+function mouseClicked(){
+	// console.log('mouse clicked');
 
 	// checks to see if a star is clicked
+	poked=false;
 	for(var i=0; i<stars.length; i++){
 		if(stars[i].poke()){
-			console.log(stars[i].x +","+ stars[i].y);
+			poked=true;
+			// console.log(stars[i].x +","+ stars[i].y);
 			// tracks if the first or second star is clicked
 			clickNum++;
 
 			if(clickNum==1){
-				console.log("clickNum is " + clickNum);
+				// console.log("clickNum is " + clickNum);
 				// stores the location of first star
 				x1=mouseX;
 				y1=mouseY;
 			}
 			else if(clickNum==2){
-				console.log("clickNum is now " + clickNum);
+				// console.log("clickNum is now " + clickNum);
 				// stores the location of the second star
 				x2=mouseX;
 				y2=mouseY;
@@ -135,17 +184,37 @@ function mousePressed(){
 
 				// resets number of stars clicked
 				clickNum=0;
-
-				console.log('x1 is ' + x1);
-				console.log('y1 is ' + y1);
-				console.log('x2 is ' + x2);
-				console.log('y2 is ' + y2);
-				console.log(lines.length);
 			}
 		}
 	}
+	if(poked===false){
+		stars.push(new Star(mouseX, mouseY));
+		clickNum=0;
+		sendOneStar({
+ 			'starX': mouseX,
+ 			'starY': mouseY
+ 		});
+
+	}
 }
 
+function mouseDragged(){
+	for(var i=0; i<stars.length; i++){
+		if(stars[i].poke()){
+			poked=true;
+			// console.log(stars[i].x +","+ stars[i].y);
+			// tracks if the first or second star is clicked
+			isMoved=true;
+			moveStar=stars[i];
+			starNum=i;
+		}
+			
+	}
+}
+function mouseReleased(){
+	isMoved=false;
+	isLineMove=false;
+}
 function Star(x, y){
 	// create stars
 	this.x=x;
@@ -187,7 +256,7 @@ function Star(x, y){
 			mouseX < (this.x+this.size/2) &&
 			mouseY > (this.y-this.size/2) &&
 			mouseY < (this.y+this.size/2)){
-			console.log(this.x + ',' + this.y);
+			// console.log(this.x + ',' + this.y);
 			return true;
 		}
 		else{
@@ -220,6 +289,7 @@ function emptylines(){
 	// removes the lines between the stars without changing location of the stars
 	lines=[];
 	background("#0e2c5b");
+	// poked=true;
 	clickNum=0;
 	// sends the request to clear lines to other users
 	sendClear();
@@ -228,18 +298,19 @@ function emptylines(){
 
 function genStars(){
 	stars=[];
+	// poked=true;
 	for(var i=0; i<20; i++){
 		// creates 20 stars and randomly places them around the page
 		stars.push(new Star(random(1300), random(50, 500)));
 		// console.log(stars[i].x + ", "+ stars[i].y);
 	}
-	console.log("genStar function run");
-	
  	//sendStatrs is a function that will emit array to the server
  	sendStars({
  		'starry': stars
  	});
  	emptylines();
+ 	clickNum=0;
+
 }
 
 

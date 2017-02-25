@@ -51,6 +51,15 @@ io.sockets.on('connection',
 			socket.broadcast.emit('clearlines');
 		});
 
+		//receive user generated star
+		socket.on('newStar', function(data){
+			socket.broadcast.emit('addStar', data);
+		});
+
+		socket.on('movestar', function(data){
+			socket.broadcast.emit('moveLocation', data);
+		})
+
 		socket.on('disconnect', function() {
 			console.log("Client has disconnected " + socket.id);
 		});
