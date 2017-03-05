@@ -61,17 +61,18 @@ function draw() {
 		text('Generate stars to Start', windowWidth/2, 80);
 	}
 	
+	// shows connections between stars
+ 	for(var i=0; i<lines.length; i++){
+ 		lines[i].show();
+ 	}
+
 	for(var i=0; i<stars.length; i++){
 		// displays the stars
  		stars[i].display();
  		// calls function to make stars blink
  		stars[i].update();
  	}
- 	// shows connections between stars
- 	for(var i=0; i<lines.length; i++){
- 		lines[i].show();
- 	}
-
+ 	
  	if(isMoved){
  		moveStar.x=mouseX;
  		moveStar.y=mouseY;
